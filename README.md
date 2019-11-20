@@ -1,7 +1,7 @@
 # Stellar Demo Wallet
 
 ## Demo
-http://18.234.88.13:8080
+http://34.228.64.68:8080
 
 ## Build Setup
 
