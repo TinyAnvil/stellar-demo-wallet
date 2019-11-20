@@ -187,6 +187,11 @@ li span {
   color: darkgray;
   font-size: 14px;
 }
+p {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 strong {
   font-weight: 600;
 }
