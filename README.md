@@ -1,7 +1,7 @@
 # Stellar Demo Wallet
 
 ## Demo
-http://34.228.64.68:8080
+http://ec2-34-196-140-163.compute-1.amazonaws.com:8080
 
 ## Build Setup
 
