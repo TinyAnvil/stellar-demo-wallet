@@ -19,4 +19,13 @@ $ yarn start
 $ yarn generate
 ```
 
+## Glitch Setup
+
+``` bash
+$ enable-npm
+$ yarn
+$ yarn build
+$ yarn cache clean
+```
+
 For detailed explanation on how things work, check out [Nuxt.js docs](https://nuxtjs.org).
