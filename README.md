@@ -1,6 +1,7 @@
-# stellar-demo-wallet
+# Stellar Demo Wallet
 
-> My groundbreaking Nuxt.js project
+## Demo
+http://18.234.88.13:8080
 
 ## Build Setup
 
@@ -17,15 +18,6 @@ $ yarn start
 
 # generate static project
 $ yarn generate
-```
-
-## Glitch Setup
-
-``` bash
-$ enable-npm
-$ yarn
-$ yarn build
-$ yarn cache clean
 ```
 
 For detailed explanation on how things work, check out [Nuxt.js docs](https://nuxtjs.org).
