@@ -2,7 +2,7 @@
 
 ## Demo
 http://ec2-34-196-140-163.compute-1.amazonaws.com:8080  
-// Could take a hot minute to reboot as it's a passive ec2 instance
+Could take a hot minute to reboot as it's a passive ec2 instance
 
 ## Build Setup
 
