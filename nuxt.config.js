@@ -5,11 +5,10 @@ export default {
   ** Headers of the page
   */
   head: {
-    title: process.env.npm_package_name || '',
+    title: 'Stellar Demo Wallet',
     meta: [
       { charset: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { hid: 'description', name: 'description', content: process.env.npm_package_description || '' }
+      { name: 'viewport', content: 'width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' },
     ],
     link: [
     ]
@@ -17,11 +16,17 @@ export default {
   /*
   ** Customize the progress-bar color
   */
-  loading: { color: '#fff' },
+  loading: false,
+  loadingIndicator: {
+    name: 'circle',
+    color: '#DDDDF9',
+    background: '#F7F7FC'
+  },
   /*
   ** Global CSS
   */
   css: [
+    '~/assets/scss/style.scss'
   ],
   /*
   ** Plugins to load before mounting the App
