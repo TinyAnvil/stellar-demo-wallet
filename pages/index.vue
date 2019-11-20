@@ -13,7 +13,7 @@
   </ul>
 
   <button @click="create" v-if="!keystore">Create Account</button>
-  <button @click="fund" v-if="keystore && !account">
+  <button @click="fund" v-if="keystore && !account && !loading.update">
     <loader v-if="loading.fund" />
     Fund Account
   </button>
