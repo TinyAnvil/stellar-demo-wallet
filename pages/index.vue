@@ -1,5 +1,7 @@
 <template>
 <main>
+  <prompt :prompt="prompt" />
+
   <p v-if="keystore">
     <strong v-html="keystore.address"></strong>
   </p>
@@ -13,6 +15,7 @@
   </ul>
 
   <button @click="create" v-if="!keystore">Create Account</button>
+
   <button @click="fund" v-if="keystore && !account && !loading.update">
     <loader v-if="loading.fund" />
     Fund Account
@@ -23,10 +26,16 @@
     Make Payment
   </button>
 
+  <button @click="trust" v-if="account">
+    <loader v-if="loading.trust" />
+    Trust Asset
+  </button>
+
   <button @click="update" v-if="account">
     <loader v-if="loading.update" /> 
     Update Account
   </button>
+
   <button @click="copySecret" v-if="account">Copy Secret</button>
 
   <pre class="error" v-html="error" v-if="error"></pre>
@@ -49,33 +58,55 @@ import copy from 'copy-to-clipboard'
 import _ from 'lodash-es'
 
 import Loader from '~/components/loader'
+import Prompt from '~/components/prompt'
 
 const Keystore = new StellarKeystore
 const server = new Server('https://horizon-testnet.stellar.org')
 
 export default {
   components: {
-    Loader
+    Loader,
+    Prompt
   },
   data() {
     return {
-      keystore: localStorage.hasOwnProperty('KEYSTORE') ? JSON.parse(localStorage.getItem('KEYSTORE')) : null,
+      keystore: null,
       account: null,
       error: null,
       loading: {
         fund: false,
         pay: false,
+        trust: false,
         update: false,
-      }
+      },
+      prompt: {
+        show: false,
+        message: null,
+        placeholder: null
+      },
+      killstream: null
     }
   },
   mounted() {
-    if (this.keystore)
-      this.update()
+    this.keystore = localStorage.hasOwnProperty('KEYSTORE') ? JSON.parse(localStorage.getItem('KEYSTORE')) : null
+  },
+  watch: {
+    async keystore() {
+      if (!this.killstream) {
+        const pubkey = await Keystore.publicKey(this.keystore)
+
+        this.killstream = server
+        .accounts()
+        .accountId(pubkey)
+        .stream({
+          onmessage: (account) => this.account = account
+        })
+      }
+    }
   },
   methods: {
     async create() {
-      const pincode = prompt('Enter a keystore pincode')
+      const pincode = await this.setPrompt('Enter a keystore pincode')
 
       if (!pincode)
         return
@@ -87,7 +118,9 @@ export default {
 
       localStorage.setItem('KEYSTORE', JSON.stringify(this.keystore))
     },
+
     async fund() {
+      this.error = null
       this.loading.fund = true
 
       const pubkey = await Keystore.publicKey(this.keystore)
@@ -97,7 +130,9 @@ export default {
       .catch((err) => this.error = _.get(err, 'response.data'))
       .finally(() => this.loading.fund = false)
     },
+
     async update() {
+      this.error = null
       this.loading.update = true
 
       const pubkey = await Keystore.publicKey(this.keystore)
@@ -110,60 +145,131 @@ export default {
       .catch((err) => this.error = _.get(err, 'response.data'))
       .finally(() => this.loading.update = false)
     },
-    async copySecret() {
-      const pincode = prompt('Enter your keystore pincode')
 
-      if (!pincode)
-        return
-
-      const keypair = await Keystore.keypair(this.keystore, pincode)
-
-      copy(keypair.secret())
-    },
-    async pay() {
-      let instructions = prompt('{Amount} {Asset} {Destination}')
+    async trust() {
+      let instructions = await this.setPrompt('{Asset} {Issuer}')
           instructions = instructions.split(' ')
 
-      if (!/xlm/gi.test(instructions[1]))
-        instructions[3] = prompt(`Who issues the ${instructions[1]} asset?`)
-
-      const pincode = prompt('Enter your keystore pincode')
+      const pincode = await this.setPrompt('Enter your keystore pincode')
 
       if (
         !instructions
         || !pincode
       ) return
 
-      this.loading.pay = true
+      this.error = null
+      this.loading.trust = true
 
-      let keypair = await Keystore.keypair(this.keystore, pincode)
-          keypair = Keypair.fromSecret(keypair.secret())
+      Keystore
+      .keypair(this.keystore, pincode)
+      .then((keypair) => {
+        keypair = Keypair.fromSecret(keypair.secret())
 
-      server.accounts()
-      .accountId(keypair.publicKey())
-      .call()
-      .then(({sequence}) => {
-        const account = new Account(keypair.publicKey(), sequence)
-        const transaction = new TransactionBuilder(account, {
-          fee: BASE_FEE,
-          networkPassphrase: Networks.TESTNET
+        return server.accounts()
+        .accountId(keypair.publicKey())
+        .call()
+        .then(({sequence}) => {
+          const account = new Account(keypair.publicKey(), sequence)
+          const transaction = new TransactionBuilder(account, {
+            fee: BASE_FEE,
+            networkPassphrase: Networks.TESTNET
+          })
+          .addOperation(Operation.changeTrust({
+            asset: new Asset(instructions[0], instructions[1])
+          }))
+          .setTimeout(0)
+          .build()
+
+          transaction.sign(keypair)
+          return server.submitTransaction(transaction)
         })
-        .addOperation(Operation.payment({
-          destination: instructions[2],
-          asset: instructions[3] ? new Asset(instructions[1], instructions[3]) : Asset.native(),
-          amount: instructions[0]
-        }))
-        .setTimeout(0)
-        .build()
-
-        transaction.sign(keypair)
-        return server.submitTransaction(transaction)
       })
       .then((res) => console.log(res))
-      .catch((err) => this.error = _.get(err, 'response.data'))
+      .catch((err) => this.error = _.get(err, 'response.data', err))
+      .finally(() => {
+        this.loading.trust = false
+        this.update()
+      })
+    },
+
+    async pay() {
+      let instructions = await this.setPrompt('{Amount} {Asset} {Destination}')
+          instructions = instructions.split(' ')
+
+      if (!/xlm/gi.test(instructions[1]))
+        instructions[3] = await this.setPrompt(`Who issues the ${instructions[1]} asset?`, 'Enter ME to refer to yourself')
+
+      const pincode = await this.setPrompt('Enter your keystore pincode')
+
+      if (
+        !instructions
+        || !pincode
+      ) return
+
+      this.error = null
+      this.loading.pay = true
+
+      Keystore
+      .keypair(this.keystore, pincode)
+      .then((keypair) => {
+        keypair = Keypair.fromSecret(keypair.secret())
+
+        if (/me/gi.test(instructions[3]))
+          instructions[3] = keypair.publicKey()
+
+        return server.accounts()
+        .accountId(keypair.publicKey())
+        .call()
+        .then(({sequence}) => {
+          const account = new Account(keypair.publicKey(), sequence)
+          const transaction = new TransactionBuilder(account, {
+            fee: BASE_FEE,
+            networkPassphrase: Networks.TESTNET
+          })
+          .addOperation(Operation.payment({
+            destination: instructions[2],
+            asset: instructions[3] ? new Asset(instructions[1], instructions[3]) : Asset.native(),
+            amount: instructions[0]
+          }))
+          .setTimeout(0)
+          .build()
+
+          transaction.sign(keypair)
+          return server.submitTransaction(transaction)
+        })
+      })
+      .then((res) => console.log(res))
+      .catch((err) => this.error = _.get(err, 'response.data', err))
       .finally(() => {
         this.loading.pay = false
         this.update()
+      })
+    },
+
+    async copySecret() {
+      const pincode = await this.setPrompt('Enter your keystore pincode')
+
+      if (!pincode)
+        return
+
+      this.error = null
+
+      Keystore
+      .keypair(this.keystore, pincode)
+      .then((keypair) => copy(keypair.secret()))
+      .catch((err) => this.error = err)
+    },
+    setPrompt(
+      message = null, 
+      placeholder = null
+    ) {
+      this.prompt.show = true
+      this.prompt.message = message
+      this.prompt.placeholder = placeholder
+
+      return new Promise((resolve, reject) => { 
+        this.prompt.resolve = resolve
+        this.prompt.reject = reject
       })
     }
   }
@@ -173,6 +279,7 @@ export default {
 <style>
 main {
   padding: 20px;
+  position: relative;
 }
 p,
 ul,

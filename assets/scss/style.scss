@@ -5,6 +5,9 @@
 @import
 './vendor';
 
+* {
+  box-sizing: border-box;
+}
 html,
 body,
 input,
