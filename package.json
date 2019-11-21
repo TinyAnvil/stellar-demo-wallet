@@ -15,14 +15,12 @@
     "copy-to-clipboard": "^3.2.0",
     "lodash-es": "^4.17.15",
     "nuxt": "^2.10.2",
+    "serverless-finch": "^2.4.3",
     "stellar-keystore": "^2.0.1",
     "stellar-sdk": "^3.3.0"
   },
   "devDependencies": {
     "node-sass": "^4.13.0",
     "sass-loader": "^8.0.0"
-  },
-  "engines": { 
-    "node" : ">12.0.0" 
   }
 }
