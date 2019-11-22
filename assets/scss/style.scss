@@ -39,6 +39,7 @@ button {
   color: white;
   border: none;
   outline: none;
+  flex-shrink: 0;
 
   &.small {
     padding: 0 5px;

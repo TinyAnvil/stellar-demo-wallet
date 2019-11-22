@@ -1,0 +1,12 @@
+{
+  "name": "stellar-demo-wallet",
+  "version": "1.0.0",
+  "description": "Packaged externals for stellar-demo-wallet",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "lodash": "",
+    "pusher": "^3.0.0",
+    "query-string": "^6.9.0"
+  }
+}

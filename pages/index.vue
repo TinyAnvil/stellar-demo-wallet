@@ -45,7 +45,7 @@
   <ul class="members" v-if="members">
     <li v-for="member in members" :key="member.id">
       <h5>
-        {{member.id}}
+        <aside>{{member.id}}</aside>
         <button class="small" @click="pay(member.id, 'XLM')">Pay XLM</button>
       </h5>
 
@@ -430,7 +430,8 @@ main {
   padding: 20px;
   position: relative;
 }
-li:last-of-type {
+li:last-of-type,
+ul:last-of-type {
   margin-bottom: 0;
 }
 li span {
@@ -445,16 +446,24 @@ p {
 
 .members {
   margin-top: 20px;
+  background-color: whitesmoke;
+  padding: 20px 10px;
 
   h5 {
     margin-bottom: 10px;
     display: flex;
     align-items: center;
+
+    aside {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
   li {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    // white-space: nowrap;
+    // overflow: hidden;
+    // text-overflow: ellipsis;
 
     span {
       margin-left: 10px;
