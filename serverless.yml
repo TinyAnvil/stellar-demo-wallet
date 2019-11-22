@@ -11,6 +11,7 @@ plugins:
 custom:
   client:
     bucketName: stellar-demo-wallet
+    errorDocument: 200.html
     distributionFolder: dist
   webpack:
     webpackConfig: ./webpack.config.js
