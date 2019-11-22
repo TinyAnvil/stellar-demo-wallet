@@ -2,9 +2,7 @@
 <main>
   <prompt :prompt="prompt" />
 
-  <p>
-    Room Code: {{roomCode}}
-  </p>
+  <p>Room Code: {{roomCode}}</p>
 
   <p v-if="keystore">
     <strong v-html="keystore.address"></strong>
@@ -41,6 +39,8 @@
   </button>
 
   <button @click="copySecret" v-if="account">Copy Secret</button>
+
+  <p class="members-title">Room Members</p>
 
   <ul class="members" v-if="members && members.length">
     <li v-for="member in members" :key="member.id">
@@ -454,10 +454,13 @@ p {
   text-overflow: ellipsis;
 }
 
-.members {
+.members-title {
   margin-top: 20px;
+}
+.members {
   background-color: whitesmoke;
   padding: 20px 10px;
+  max-width: 800px;
 
   h5 {
     display: flex;
