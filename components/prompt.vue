@@ -59,7 +59,7 @@ export default {
   align-content: center;
   min-height: 100vh;
   min-width: 100vw;
-  background-color: rgba(black, 0.1);
+  background-color: rgba(black, 0.2);
 }
 .prompt {
   background-color: white;

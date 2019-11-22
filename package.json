@@ -5,23 +5,32 @@
   "author": "Tyler van der Hoeven",
   "private": true,
   "scripts": {
-    "dev": "nuxt",
+    "dev:client": "nuxt",
+    "dev:server": "sls offline start",
     "build": "nuxt build",
     "start": "nuxt start",
     "generate": "nuxt generate",
-    "deploy": "yarn build ; sls client deploy"
+    "deploy": "yarn build ; sls client deploy ; sls deploy"
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.8.0",
     "copy-to-clipboard": "^3.2.0",
     "lodash-es": "^4.17.15",
     "nuxt": "^2.10.2",
-    "serverless-finch": "^2.4.3",
+    "pusher": "^3.0.0",
+    "pusher-js": "^5.0.3",
+    "query-string": "^6.9.0",
     "stellar-keystore": "^2.0.1",
     "stellar-sdk": "^3.3.0"
   },
   "devDependencies": {
+    "fs": "^0.0.1-security",
     "node-sass": "^4.13.0",
-    "sass-loader": "^8.0.0"
+    "path": "^0.12.7",
+    "sass-loader": "^8.0.0",
+    "serverless-finch": "^2.4.3",
+    "serverless-offline": "^5.12.0",
+    "serverless-webpack": "^5.3.1",
+    "webpack-node-externals": "^1.7.2"
   }
 }

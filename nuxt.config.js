@@ -1,6 +1,17 @@
+import path from 'path'
+import fs from 'fs'
+
+const isDev = process.env.NODE_ENV !== 'production'
 
 export default {
   mode: 'spa',
+  dev: isDev,
+  env: {
+    apiBaseUrl: isDev ? 'https://localhost:4000' : 'https://i8ggsqlxr7.execute-api.us-east-1.amazonaws.com/dev',
+    pusherKey: 'd79f9585202c97a316b4',
+    pusherCluster: 'us2'
+  },
+
   /*
   ** Headers of the page
   */
@@ -60,5 +71,21 @@ export default {
     */
     extend (config, ctx) {
     }
-  }
+  },
+  router: {
+    middleware: ['root-redirect'],
+    extendRoutes(routes, resolve) {
+      routes.push({
+        name: 'room',
+        path: '/:roomCode',
+        component: resolve(__dirname, 'pages/index.vue')
+      })
+    }
+  },
+  server: isDev ? {
+    https: {
+      key: fs.readFileSync(path.resolve(__dirname, './certs/key.pem')),
+      cert: fs.readFileSync(path.resolve(__dirname, './certs/cert.pem'))
+    }
+  } : null
 }

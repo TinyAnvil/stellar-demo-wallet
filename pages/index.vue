@@ -2,6 +2,10 @@
 <main>
   <prompt :prompt="prompt" />
 
+  <p>
+    Room Code: {{roomCode}}
+  </p>
+
   <p v-if="keystore">
     <strong v-html="keystore.address"></strong>
   </p>
@@ -38,6 +42,40 @@
 
   <button @click="copySecret" v-if="account">Copy Secret</button>
 
+  <ul class="members" v-if="members">
+    <li v-for="member in members" :key="member.id">
+      <h5>
+        {{member.id}}
+        <button class="small" @click="pay(member.id, 'XLM')">Pay XLM</button>
+      </h5>
+
+      <ul v-if="assets[member.id] && assets[member.id].issues">
+        <li v-for="asset in assets[member.id].issues" :key="asset">
+          → 
+          {{asset}}
+          <span v-if="hasTrust(asset, member.id)">✔</span>
+          <button class="small" @click="trust(asset, member.id)" v-else>Trust {{asset}}</button>
+        </li>
+      </ul>
+
+      <ul v-if="assets[member.id] && assets[member.id].trusts">
+        <li v-for="asset in assets[member.id].trusts" :key="`${asset.asset_code}:${asset.asset_issuer}`">
+          ←
+          {{asset.asset_code}}
+
+          <span v-html="
+            asset.asset_issuer === keystore.address 
+            ? 'ME' 
+            : `${asset.asset_issuer.substr(0, 4)}...${asset.asset_issuer.substr(asset.asset_issuer.length - 4, asset.asset_issuer.length)}`"
+          ></span>
+
+          <button class="small" @click="pay(member.id, asset.asset_code, asset.asset_issuer)" v-if="hasTrust(asset.asset_code, asset.asset_issuer)">Pay {{asset.asset_code}}</button>
+          <button class="small" @click="pay(member.id, asset.asset_code, asset.asset_issuer)" v-if="asset.asset_issuer === keystore.address">Pay {{asset.asset_code}}</button>
+        </li>
+      </ul>
+    </li>
+  </ul>
+
   <pre class="error" v-html="error" v-if="error"></pre>
 </main>
 </template>
@@ -56,6 +94,7 @@ import {
 import { StellarKeystore } from 'stellar-keystore'
 import copy from 'copy-to-clipboard'
 import _ from 'lodash-es'
+import Pusher from 'pusher-js';
 
 import Loader from '~/components/loader'
 import Prompt from '~/components/prompt'
@@ -72,6 +111,7 @@ export default {
     return {
       keystore: null,
       account: null,
+      assets: {},
       error: null,
       loading: {
         fund: false,
@@ -84,22 +124,59 @@ export default {
         message: null,
         placeholder: null
       },
-      killstream: null
+      roomCode: this.$route.params.roomCode,
+      killStream: null,
+      presenceChannel: null
+    }
+  },
+  computed: {
+    members() {
+      if (!this.presenceChannel)
+        return
+
+      let members = []
+      
+      this.presenceChannel.members.count // Included to get this field to update dynamically
+      this.presenceChannel.members.each((member) => members.push(member))
+
+      return _.filter(members, (member) => member.id !== this.keystore.address)
     }
   },
   mounted() {
     this.keystore = localStorage.hasOwnProperty('KEYSTORE') ? JSON.parse(localStorage.getItem('KEYSTORE')) : null
   },
   watch: {
-    async keystore() {
-      if (!this.killstream) {
-        const pubkey = await Keystore.publicKey(this.keystore)
-
-        this.killstream = server
+    keystore() {
+      if (!this.killStream) 
+        this.killStream = server
         .accounts()
-        .accountId(pubkey)
+        .accountId(this.keystore.address)
         .stream({
-          onmessage: (account) => this.account = account
+          onmessage: (account) => {
+            this.getAssets()
+            this.account = account
+          }
+        })
+
+      if (!this.presenceChannel) {
+        const socket = new Pusher(process.env.pusherKey, {
+          cluster: process.env.pusherCluster,
+          authEndpoint: `${process.env.apiBaseUrl}/pusher/auth`,
+          forceTLS: true,
+          auth: {
+            params: {
+              publicKey: this.keystore.address
+            }
+          }
+        })
+
+        this.presenceChannel = socket.subscribe(`presence-${this.roomCode}`)
+
+        this.presenceChannel.bind_global((event, data) => {
+          console.log(event, data)
+
+          if (event === 'pusher:subscription_succeeded')
+            this.getAssets()
         })
       }
     }
@@ -119,36 +196,87 @@ export default {
       localStorage.setItem('KEYSTORE', JSON.stringify(this.keystore))
     },
 
-    async fund() {
+    fund() {
       this.error = null
       this.loading.fund = true
 
-      const pubkey = await Keystore.publicKey(this.keystore)
-
-      this.$axios(`https://friendbot.stellar.org?addr=${pubkey}`)
+      this.$axios(`https://friendbot.stellar.org?addr=${this.keystore.address}`)
       .then(() => this.update())
       .catch((err) => this.error = _.get(err, 'response.data'))
       .finally(() => this.loading.fund = false)
     },
 
-    async update() {
+    update() {
       this.error = null
       this.loading.update = true
 
-      const pubkey = await Keystore.publicKey(this.keystore)
-
       server
       .accounts()
-      .accountId(pubkey)
+      .accountId(this.keystore.address)
       .call()
       .then((account) => this.account = account)
       .catch((err) => this.error = _.get(err, 'response.data'))
       .finally(() => this.loading.update = false)
     },
 
-    async trust() {
-      let instructions = await this.setPrompt('{Asset} {Issuer}')
-          instructions = instructions.split(' ')
+    getAssets() {
+      if (!this.members)
+        return
+
+      _.each(this.members, (member) => {
+        server
+        .accounts()
+        .accountId(member.id)
+        .call()
+        .then(({account_id, balances}) => _.each(_.filter(balances, (balance) => balance.asset_type !== 'native'), (balance) => {
+          if (!this.assets[account_id])
+            this.$set(this.assets, account_id, {})
+
+          if (this.assets[account_id].trusts) this.assets[account_id].trusts.push({
+            asset_code: balance.asset_code,
+            asset_issuer: balance.asset_issuer
+          })
+          else this.$set(this.assets[account_id], 'trusts', [{
+            asset_code: balance.asset_code,
+            asset_issuer: balance.asset_issuer
+          }])
+
+          this.assets[account_id].trusts = _.uniqBy(this.assets[account_id].trusts, (balance) => `${balance.asset_code}:${balance.asset_issuer}`)
+        }))
+
+        server
+        .assets()
+        .forIssuer(member.id)
+        .call()
+        .then(({records}) => _.each(records, (record) => {
+          if (!this.assets[record.asset_issuer])
+            this.$set(this.assets, record.asset_issuer, {})
+
+          if (this.assets[record.asset_issuer].issues)
+            this.assets[record.asset_issuer].issues.push(record.asset_code)
+          else
+            this.$set(this.assets[record.asset_issuer], 'issues', [record.asset_code])
+
+          this.assets[record.asset_issuer].issues = _.uniq(this.assets[record.asset_issuer].issues)
+        }))
+      })
+    },
+
+    async trust(
+      asset = null,
+      issuer = null
+    ) {
+      let instructions
+
+      if (
+        asset 
+        && issuer
+      ) instructions = [asset, issuer]
+
+      else {
+        instructions = await this.setPrompt('{Asset} {Issuer}')
+        instructions = instructions.split(' ')
+      }
 
       const pincode = await this.setPrompt('Enter your keystore pincode')
 
@@ -192,12 +320,28 @@ export default {
       })
     },
 
-    async pay() {
-      let instructions = await this.setPrompt('{Amount} {Asset} {Destination}')
-          instructions = instructions.split(' ')
+    async pay(
+      destination = null,
+      asset = null, 
+      issuer = null
+    ) {
+      let instructions
 
-      if (!/xlm/gi.test(instructions[1]))
-        instructions[3] = await this.setPrompt(`Who issues the ${instructions[1]} asset?`, 'Enter ME to refer to yourself')
+      if (
+        destination
+        && asset 
+      ) {
+        instructions = await this.setPrompt(`How much ${asset} to pay?`)
+        instructions = [instructions, asset, destination, issuer]
+      }
+
+      else {
+        instructions = await this.setPrompt('{Amount} {Asset} {Destination}')
+        instructions = instructions.split(' ')
+
+        if (!/xlm/gi.test(instructions[1]))
+          instructions[3] = await this.setPrompt(`Who issues the ${instructions[1]} asset?`, 'Enter ME to refer to yourself')
+      }
 
       const pincode = await this.setPrompt('Enter your keystore pincode')
 
@@ -246,6 +390,10 @@ export default {
       })
     },
 
+    hasTrust(asset, issuer) {
+      return !!_.find(this.account.balances, {asset_code: asset, asset_issuer: issuer})
+    },
+
     async copySecret() {
       const pincode = await this.setPrompt('Enter your keystore pincode')
 
@@ -259,6 +407,7 @@ export default {
       .then((keypair) => copy(keypair.secret()))
       .catch((err) => this.error = err)
     },
+
     setPrompt(
       message = null, 
       placeholder = null
@@ -276,16 +425,10 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss" scoped>
 main {
   padding: 20px;
   position: relative;
-}
-p,
-ul,
-li,
-button {
-  margin-bottom: 10px;
 }
 li:last-of-type {
   margin-bottom: 0;
@@ -299,25 +442,33 @@ p {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-strong {
-  font-weight: 600;
-}
-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-transform: uppercase;
-  font-size: 14px;
-  padding: 0 10px;
-  margin: 0 0 10px;
-  height: 30px;
-  background: blue;
-  border-radius: 0;
-  color: white;
-  border: none;
-  outline: none;
-}
 
+.members {
+  margin-top: 20px;
+
+  h5 {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+  }
+  li {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    span {
+      margin-left: 10px;
+    }
+    ul li {
+      display: flex;
+      height: 20px;
+      align-items: flex-end;
+    }
+  }
+  button {
+    margin: 0 0 0 10px;
+  }
+}
 .loader {
   margin-right: 10px;
 }
