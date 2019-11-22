@@ -42,7 +42,7 @@
 
   <button @click="copySecret" v-if="account">Copy Secret</button>
 
-  <ul class="members" v-if="members">
+  <ul class="members" v-if="members && members.length">
     <li v-for="member in members" :key="member.id">
       <h5>
         <aside>{{member.id}}</aside>
@@ -69,7 +69,13 @@
             : `${asset.asset_issuer.substr(0, 4)}...${asset.asset_issuer.substr(asset.asset_issuer.length - 4, asset.asset_issuer.length)}`"
           ></span>
 
+          <!-- If `member.id` trusts asset along with us -->
           <button class="small" @click="pay(member.id, asset.asset_code, asset.asset_issuer)" v-if="hasTrust(asset.asset_code, asset.asset_issuer)">Pay {{asset.asset_code}}</button>
+
+          <!-- If we don't yet trust this asset and it is not issued by us -->
+          <button class="small" @click="trust(asset.asset_code, asset.asset_issuer)" v-else-if="asset.asset_issuer !== keystore.address">Trust {{asset.asset_code}}</button>
+
+          <!-- If `member.id` trusts an asset issued by us -->
           <button class="small" @click="pay(member.id, asset.asset_code, asset.asset_issuer)" v-if="asset.asset_issuer === keystore.address">Pay {{asset.asset_code}}</button>
         </li>
       </ul>
@@ -147,18 +153,24 @@ export default {
   },
   watch: {
     keystore() {
-      if (!this.killStream) 
-        this.killStream = server
-        .accounts()
-        .accountId(this.keystore.address)
-        .stream({
-          onmessage: (account) => {
-            this.getAssets()
-            this.account = account
-          }
-        })
-
-      if (!this.presenceChannel) {
+      if (
+        this.keystore
+        && !this.killStream
+      ) this.killStream = server
+      .accounts()
+      .accountId(this.keystore.address)
+      .stream({
+        onmessage: (account) => {
+          this.getAssets()
+          this.account = account
+        }
+      })
+    },
+    account() {
+      if (
+        this.account 
+        && !this.presenceChannel
+      ) {
         const socket = new Pusher(process.env.pusherKey, {
           cluster: process.env.pusherCluster,
           authEndpoint: `${process.env.apiBaseUrl}/pusher/auth`,
@@ -173,8 +185,6 @@ export default {
         this.presenceChannel = socket.subscribe(`presence-${this.roomCode}`)
 
         this.presenceChannel.bind_global((event, data) => {
-          console.log(event, data)
-
           if (event === 'pusher:subscription_succeeded')
             this.getAssets()
         })
@@ -391,7 +401,8 @@ export default {
     },
 
     hasTrust(asset, issuer) {
-      return !!_.find(this.account.balances, {asset_code: asset, asset_issuer: issuer})
+      if (this.account)
+        return !!_.find(this.account.balances, {asset_code: asset, asset_issuer: issuer})
     },
 
     async copySecret() {
@@ -430,8 +441,7 @@ main {
   padding: 20px;
   position: relative;
 }
-li:last-of-type,
-ul:last-of-type {
+li:last-of-type {
   margin-bottom: 0;
 }
 li span {
@@ -450,7 +460,7 @@ p {
   padding: 20px 10px;
 
   h5 {
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     display: flex;
     align-items: center;
 
@@ -460,10 +470,17 @@ p {
       text-overflow: ellipsis;
     }
   }
+  ul:last-of-type {
+    margin-bottom: 0;
+  }
+  > li {
+    margin-bottom: 20px;
+
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+  }
   li {
-    // white-space: nowrap;
-    // overflow: hidden;
-    // text-overflow: ellipsis;
 
     span {
       margin-left: 10px;

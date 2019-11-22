@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { headers, parseError, getAuth } from './js/utils'
+import { headers } from './js/utils'
 import pusher from './js/pusher'
 import queryString from 'query-string'
 

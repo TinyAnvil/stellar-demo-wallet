@@ -30,17 +30,3 @@ export function parseError(err) {
     body: JSON.stringify(error)
   }
 }
-
-export function getAuth(event) {
-  let h_auth = _.get(event, 'headers.Authorization', _.get(event, 'headers.authorization'))
-
-  if (
-    h_auth
-    && h_auth.substring(0, 7) === 'Bearer '
-  ) h_auth = h_auth.replace('Bearer ', '')
-
-  else
-    throw 'Authorization header malformed'
-
-  return h_auth
-}

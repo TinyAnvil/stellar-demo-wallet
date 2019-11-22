@@ -28,14 +28,6 @@ provider:
     lambda: true
 
 functions:
-  account:
-    handler: handler.account
-    timeout: 10
-    events:
-      - http:
-          path: account
-          method: GET
-          cors: true
   pusherAuth:
     handler: handler.auth
     timeout: 10

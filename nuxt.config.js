@@ -7,7 +7,7 @@ export default {
   mode: 'spa',
   dev: isDev,
   env: {
-    apiBaseUrl: isDev ? 'https://localhost:4000' : 'https://i8ggsqlxr7.execute-api.us-east-1.amazonaws.com/dev',
+    apiBaseUrl: isDev ? 'https://localhost:4000' : 'https://l99is9axvd.execute-api.us-east-1.amazonaws.com/dev',
     pusherKey: 'd79f9585202c97a316b4',
     pusherCluster: 'us2'
   },
@@ -30,8 +30,8 @@ export default {
   loading: false,
   loadingIndicator: {
     name: 'circle',
-    color: '#DDDDF9',
-    background: '#F7F7FC'
+    color: 'whitesmoke',
+    background: 'white'
   },
   /*
   ** Global CSS

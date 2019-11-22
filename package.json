@@ -15,6 +15,7 @@
   "dependencies": {
     "@nuxtjs/axios": "^5.8.0",
     "copy-to-clipboard": "^3.2.0",
+    "lodash": "^4.17.15",
     "lodash-es": "^4.17.15",
     "nuxt": "^2.10.2",
     "pusher": "^3.0.0",
