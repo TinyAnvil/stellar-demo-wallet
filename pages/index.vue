@@ -460,7 +460,6 @@ p {
   padding: 20px 10px;
 
   h5 {
-    margin-bottom: 5px;
     display: flex;
     align-items: center;
 
@@ -476,6 +475,9 @@ p {
   > li {
     margin-bottom: 20px;
 
+    ul:first-of-type {
+      margin-top: 5px;
+    }
     &:last-of-type {
       margin-bottom: 0;
     }
