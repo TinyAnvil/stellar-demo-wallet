@@ -40,7 +40,7 @@
 
   <button @click="copySecret" v-if="account">Copy Secret</button>
 
-  <p class="members-title">Room Members</p>
+  <p class="members-title" v-if="members && members.length">Room Members</p>
 
   <ul class="members" v-if="members && members.length">
     <li v-for="member in members" :key="member.id">
@@ -156,15 +156,19 @@ export default {
       if (
         this.keystore
         && !this.killStream
-      ) this.killStream = server
-      .accounts()
-      .accountId(this.keystore.address)
-      .stream({
-        onmessage: (account) => {
-          this.getAssets()
-          this.account = account
-        }
-      })
+      ) {
+        this.update()
+
+        this.killStream = server
+        .accounts()
+        .accountId(this.keystore.address)
+        .stream({
+          onmessage: (account) => {
+            this.getAssets()
+            this.account = account
+          }
+        })
+      }
     },
     account() {
       if (

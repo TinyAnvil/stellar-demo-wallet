@@ -9,8 +9,8 @@
     "dev:server": "sls offline start",
     "build": "nuxt build",
     "start": "nuxt start",
-    "generate": "nuxt generate",
-    "deploy": "yarn build ; sls client deploy ; sls deploy"
+    "deploy:client": "yarn build ; sls client deploy",
+    "deploy:server": "sls deploy"
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.8.0",
