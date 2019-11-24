@@ -7,7 +7,7 @@
     "dev:server": "sls offline start",
     "build": "nuxt build",
     "start": "nuxt start",
-    "deploy:client": "yarn build ; sls client deploy",
+    "deploy:client": "yarn build ; sls client deploy --no-confirm",
     "deploy:server": "sls deploy"
   },
   "dependencies": {
