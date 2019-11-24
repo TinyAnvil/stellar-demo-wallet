@@ -1,7 +1,5 @@
 {
   "name": "stellar-demo-wallet",
-  "version": "1.0.0",
-  "description": "My groundbreaking Nuxt.js project",
   "author": "Tyler van der Hoeven",
   "private": true,
   "scripts": {

@@ -1,9 +1,0 @@
-{
-  "apps": [
-      {
-          "name": "stellar-demo-wallet",
-          "script": "npm",
-          "args" : "run dev"
-      }
-  ]
-}

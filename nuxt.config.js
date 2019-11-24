@@ -30,7 +30,7 @@ export default {
   loading: false,
   loadingIndicator: {
     name: 'circle',
-    color: 'whitesmoke',
+    color: 'darkgray',
     background: 'white'
   },
   /*
