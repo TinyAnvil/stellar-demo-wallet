@@ -72,6 +72,9 @@ export default {
     extend (config, ctx) {
     }
   },
+  generate: {
+    dir: 'public'
+  },
   router: {
     middleware: ['root-redirect'],
     extendRoutes(routes, resolve) {

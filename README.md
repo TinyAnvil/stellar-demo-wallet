@@ -1,7 +1,7 @@
 # Stellar Demo Wallet
 
 ## Demo
-http://stellar-demo-wallet.s3-website-us-east-1.amazonaws.com
+https://stellar-demo-wallet.now.sh
 
 ## Build Setup
 

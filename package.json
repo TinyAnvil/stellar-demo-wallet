@@ -5,9 +5,9 @@
   "scripts": {
     "dev:client": "nuxt",
     "dev:server": "sls offline start",
-    "build": "nuxt build",
+    "build": "nuxt generate --spa",
     "start": "nuxt start",
-    "deploy:client": "yarn build ; sls client deploy --no-confirm",
+    "deploy:client": "yarn build ; now deploy --prod",
     "deploy:server": "sls deploy"
   },
   "dependencies": {
