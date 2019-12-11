@@ -16,11 +16,11 @@ export default {
   ** Headers of the page
   */
   head: {
-    title: 'Stellar Demo Wallet',
+    title: 'Stellar Room Wallet',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' },
-      { hid: 'description', name: 'description', content: 'Basic Stellar demo wallet for educational demonstrations' }
+      { hid: 'description', name: 'description', content: 'Basic Stellar room wallet for educational demonstrations' }
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }

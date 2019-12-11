@@ -1,6 +1,6 @@
 
-service: stellar-demo-wallet
-app: stellar-demo-wallet
+service: stellar-room-wallet
+app: stellar-room-wallet
 org: tyvdh
 
 plugins:
@@ -10,7 +10,7 @@ plugins:
 
 custom:
   client:
-    bucketName: stellar-demo-wallet
+    bucketName: stellar-room-wallet
     errorDocument: 200.html
     distributionFolder: dist
   webpack:

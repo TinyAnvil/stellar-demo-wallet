@@ -1,7 +1,7 @@
-# Stellar Demo Wallet
+# Stellar Room Wallet
 
-## Demo
-https://stellar-demo-wallet.now.sh
+## Room
+https://stellar-room-wallet.now.sh
 
 ## Build Setup
 
