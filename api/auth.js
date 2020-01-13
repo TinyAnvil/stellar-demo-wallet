@@ -8,7 +8,10 @@ export default (event, context, callback) => {
 
   const body = queryString.parse(event.body)
   const auth = pusher.authenticate(body.socket_id, body.channel_name, {
-    user_id: body.publicKey
+    user_id: body.publicKey,
+    user_info: {
+      nickAccount: body.nickAccount
+    }
   })
 
   callback(null, {

@@ -6,7 +6,8 @@ process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = isDev ? 0 : 1
 
 export const headers = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Credentials': true
+  'Access-Control-Allow-Credentials': true,
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS'
 }
 
 export function parseError(err) {

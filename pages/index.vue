@@ -4,15 +4,16 @@
 
   <p>Room Code: {{roomCode}}</p>
 
-  <p v-if="keystore">
-    <strong v-html="keystore.address"></strong>
+  <p v-if="nickAccount" class="nick-account">
+    <strong v-html="nickAccount"></strong>
+    <button class="small" @click="copyAddress">Copy Address</button>
   </p>
   
   <ul v-if="account">
     <li v-for="(balance, i) in account.balances" :key="i">
       {{balance.balance}} 
       {{balance.asset_code ? balance.asset_code : 'XLM'}}
-      <span v-if="balance.asset_issuer" v-html="`${balance.asset_issuer.substr(0, 4)}...${balance.asset_issuer.substr(balance.asset_issuer.length - 4, balance.asset_issuer.length)}`"></span>
+      <span v-if="balance.asset_issuer" v-html="getNickAddress(balance.asset_issuer)"></span>
     </li>
   </ul>
 
@@ -45,13 +46,13 @@
   <ul class="members" v-if="members && members.length">
     <li v-for="member in members" :key="member.id">
       <h5>
-        <aside>{{member.id}}</aside>
+        <aside>{{member.info.nickAccount || member.id}}</aside>
         <button class="small" @click="pay(member.id, 'XLM')">Pay XLM</button>
       </h5>
 
       <ul v-if="assets[member.id] && assets[member.id].issues">
         <li v-for="asset in assets[member.id].issues" :key="asset">
-          → 
+          <span>Issues</span>
           {{asset}}
           <span v-if="hasTrust(asset, member.id)">✔</span>
           <button class="small" @click="trust(asset, member.id)" v-else>Trust {{asset}}</button>
@@ -60,14 +61,14 @@
 
       <ul v-if="assets[member.id] && assets[member.id].trusts">
         <li v-for="asset in assets[member.id].trusts" :key="`${asset.asset_code}:${asset.asset_issuer}`">
-          ←
+          <span>Accepts</span>
           {{asset.asset_code}}
-
-          <span v-html="
+          <span>from</span>
+          <aside v-html="
             asset.asset_issuer === keystore.address 
             ? 'ME' 
-            : `${asset.asset_issuer.substr(0, 4)}...${asset.asset_issuer.substr(asset.asset_issuer.length - 4, asset.asset_issuer.length)}`"
-          ></span>
+            : getNickAddress(asset.asset_issuer)
+          "></aside>
 
           <!-- If `member.id` trusts asset along with us -->
           <button class="small" @click="pay(member.id, asset.asset_code, asset.asset_issuer)" v-if="hasTrust(asset.asset_code, asset.asset_issuer)">Pay {{asset.asset_code}}</button>
@@ -116,6 +117,7 @@ export default {
   data() {
     return {
       keystore: null,
+      nickname: null,
       account: null,
       assets: {},
       error: null,
@@ -146,10 +148,17 @@ export default {
       this.presenceChannel.members.each((member) => members.push(member))
 
       return _.filter(members, (member) => member.id !== this.keystore.address)
+    },
+    nickAccount() {
+      if (
+        this.nickname 
+        && this.keystore
+      ) return `${this.nickname}*${this.keystore.address.substr(0, 6)}`
     }
   },
   mounted() {
     this.keystore = localStorage.hasOwnProperty('KEYSTORE') ? JSON.parse(localStorage.getItem('KEYSTORE')) : null
+    this.nickname = localStorage.hasOwnProperty('NICKNAME') ? localStorage.getItem('NICKNAME') : null
   },
   watch: {
     keystore() {
@@ -181,7 +190,8 @@ export default {
           forceTLS: true,
           auth: {
             params: {
-              publicKey: this.keystore.address
+              publicKey: this.keystore.address,
+              nickAccount: this.nickAccount,
             }
           }
         })
@@ -198,6 +208,7 @@ export default {
   methods: {
     async create() {
       const pincode = await this.setPrompt('Enter a keystore pincode')
+      const nickname = await this.setPrompt('Enter a nickname for yourself')
 
       if (!pincode)
         return
@@ -208,6 +219,7 @@ export default {
       this.keystore = keystore.walletData
 
       localStorage.setItem('KEYSTORE', JSON.stringify(this.keystore))
+      localStorage.setItem('NICKNAME', nickname)
     },
 
     fund() {
@@ -423,6 +435,19 @@ export default {
       .catch((err) => this.error = err)
     },
 
+    copyAddress() {
+      copy(this.keystore.address)
+    },
+
+    getNickAddress(asset_issuer) {
+      const member = _.find(this.members, {id: asset_issuer})
+
+      if (member)
+        return member.info.nickAccount
+      else
+        return `${asset_issuer.substr(0, 4)}...${asset_issuer.substr(asset_issuer.length - 4, asset_issuer.length)}`
+    },
+
     setPrompt(
       message = null, 
       placeholder = null
@@ -450,12 +475,21 @@ li:last-of-type {
 }
 li span {
   color: darkgray;
-  font-size: 14px;
+  font-size: 12px;
 }
 p {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.nick-account {
+  display: flex;
+  align-items: center;
+  
+  button {
+    margin: 0 0 0 10px;
+  }
 }
 
 .members-title {
@@ -492,7 +526,11 @@ p {
   li {
 
     span {
-      margin-left: 10px;
+      margin: 0 10px;
+
+      &:first-of-type {
+        margin-left: 0;
+      }
     }
     ul li {
       display: flex;
@@ -504,6 +542,7 @@ p {
     margin: 0 0 0 10px;
   }
 }
+
 .loader {
   margin-right: 10px;
 }

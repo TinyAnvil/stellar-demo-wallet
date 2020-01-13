@@ -7,15 +7,15 @@
     "dev:server": "sls offline start",
     "build": "nuxt generate --spa",
     "start": "nuxt start",
-    "deploy:client": "yarn build ; now deploy --prod",
+    "deploy:client": "npm run build ; now deploy --prod",
     "deploy:server": "sls deploy"
   },
   "dependencies": {
-    "@nuxtjs/axios": "^5.8.0",
+    "@nuxtjs/axios": "^5.9.3",
     "copy-to-clipboard": "^3.2.0",
     "lodash": "^4.17.15",
     "lodash-es": "^4.17.15",
-    "nuxt": "^2.10.2",
+    "nuxt": "^2.11.0",
     "pusher": "^3.0.0",
     "pusher-js": "^5.0.3",
     "query-string": "^6.9.0",
@@ -26,9 +26,9 @@
     "fs": "^0.0.1-security",
     "node-sass": "^4.13.0",
     "path": "^0.12.7",
-    "sass-loader": "^8.0.0",
-    "serverless-finch": "^2.4.3",
-    "serverless-offline": "^5.12.0",
+    "sass-loader": "^8.0.2",
+    "serverless-finch": "^2.5.2",
+    "serverless-offline": "^5.12.1",
     "serverless-webpack": "^5.3.1",
     "webpack-node-externals": "^1.7.2"
   }

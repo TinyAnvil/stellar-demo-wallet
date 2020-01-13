@@ -1,22 +1,19 @@
-
 service: stellar-room-wallet
-app: stellar-room-wallet
-org: tyvdh
 
 plugins:
-  - serverless-finch
+  # - serverless-finch
   - serverless-webpack
   - serverless-offline
 
 custom:
-  client:
-    bucketName: stellar-room-wallet
-    errorDocument: 200.html
-    distributionFolder: dist
+  # client:
+  #   bucketName: stellar-room-wallet
+  #   errorDocument: 200.html
+  #   distributionFolder: dist
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules: true
-    packager: yarn
+    packager: npm
   serverless-offline:
     httpsProtocol: certs
     port: 4000

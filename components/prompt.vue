@@ -40,7 +40,7 @@ export default {
     },
     submit() {
       this.prompt.show = false
-      this.prompt.resolve(this.input)
+      this.prompt.resolve(this.input.toUpperCase())
     }
   }
 }
@@ -74,6 +74,7 @@ export default {
     padding: 5px;
     outline: none;
     border: 1px solid black;
+    text-transform: uppercase;
 
     &:focus {
       border-color: blue;
