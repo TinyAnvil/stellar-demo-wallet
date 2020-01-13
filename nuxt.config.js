@@ -75,7 +75,7 @@ export default {
     }
   },
   generate: {
-    dir: 'public'
+    dir: 'dist'
   },
   router: {
     middleware: ['root-redirect'],

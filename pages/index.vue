@@ -46,7 +46,7 @@
   <ul class="members" v-if="members && members.length">
     <li v-for="member in members" :key="member.id">
       <h5>
-        <aside>{{member.info.nickAccount || member.id}}</aside>
+        <aside>{{getNickAddress(member.id)}}</aside>
         <button class="small" @click="pay(member.id, 'XLM')">Pay XLM</button>
       </h5>
 
@@ -217,9 +217,10 @@ export default {
       const keystore = await Keystore.create(pincode, keypair)
 
       this.keystore = keystore.walletData
+      this.nickname = nickname
 
       localStorage.setItem('KEYSTORE', JSON.stringify(this.keystore))
-      localStorage.setItem('NICKNAME', nickname)
+      localStorage.setItem('NICKNAME', this.nickname)
     },
 
     fund() {
@@ -439,13 +440,13 @@ export default {
       copy(this.keystore.address)
     },
 
-    getNickAddress(asset_issuer) {
-      const member = _.find(this.members, {id: asset_issuer})
+    getNickAddress(address) {
+      const member = _.find(this.members, {id: address})
 
       if (member)
         return member.info.nickAccount
       else
-        return `${asset_issuer.substr(0, 4)}...${asset_issuer.substr(asset_issuer.length - 4, asset_issuer.length)}`
+        return `${address.substr(0, 4)}...${address.substr(address.length - 4, address.length)}`
     },
 
     setPrompt(
