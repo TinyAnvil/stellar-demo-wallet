@@ -20,7 +20,7 @@
     "pusher-js": "^5.0.3",
     "query-string": "^6.9.0",
     "stellar-keystore": "^2.0.1",
-    "stellar-sdk": "^3.3.0"
+    "stellar-sdk": "^8.2.3"
   },
   "devDependencies": {
     "fs": "^0.0.1-security",
