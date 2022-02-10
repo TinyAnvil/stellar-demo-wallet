@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "fs": "^0.0.1-security",
-    "node-sass": "^4.13.0",
+    "node-sass": "^7.0.0",
     "path": "^0.12.7",
     "sass-loader": "^8.0.2",
     "serverless-finch": "^2.5.2",
